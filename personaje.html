@@ -1,83 +1,361 @@
-const API_BASE = 'https://dragonball-api.com/api';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personaje - Dragon Ball Z</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg2: #111827;
+      --card: #161d2e;
+      --card-hover: #1e2740;
+      --border: #1e2d47;
+      --gold: #f5c518;
+      --gold2: #e8a800;
+      --orange: #ff6b00;
+      --text: #e8eaf0;
+      --muted: #8892a4;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --green: #22c55e;
+    }
 
-function getParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-async function load() {
-  const id = getParam('id');
-  if (!id) {
-    document.getElementById('content').innerHTML = '<div class="error-msg">No se especificó un personaje.</div>';
-    return;
-  }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      min-height: 100vh;
+    }
 
-  try {
-    const res = await fetch(`${API_BASE}/characters/${id}`);
-    if (!res.ok) throw new Error('No encontrado');
-    const c = await res.json();
-    render(c);
-  } catch (e) {
-    document.getElementById('content').innerHTML = `<div class="error-msg">Error al cargar el personaje (ID: ${id}).</div>`;
-  }
-}
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 10% 20%, rgba(245,197,24,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 90% 80%, rgba(59,130,246,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-function render(c) {
-  const transformsHTML = (c.transformations && c.transformations.length)
-    ? `
-      <div class="section-title">Transformaciones</div>
-      <div class="transformations-grid">
-        ${c.transformations.map(t => `
-          <div class="transform-card">
-            <div class="transform-img">
-              <img src="${t.image}" alt="${t.name}" onerror="this.src='https://placehold.co/150x150/0d1525/f5c518?text=?'" />
-            </div>
-            <div class="transform-body">
-              <div class="transform-name">${t.name}</div>
-              <div class="transform-ki">Ki: <span>${t.ki || '-'}</span></div>
-            </div>
-          </div>
-        `).join('')}
-      </div>`
-    : '';
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,14,26,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  const planetBtn = (c.originPlanet)
-    ? `<a href="planeta.html?id=${c.originPlanet.id}" class="btn-planet"> Ver planeta: ${c.originPlanet.name}</a>`
-    : '';
+    .logo {
+      font-family: 'Bangers', cursive;
+      font-size: 1.7rem;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(245,197,24,0.4);
+      text-decoration: none;
+    }
+    .logo span { color: var(--orange); }
 
-  document.getElementById('content').innerHTML = `
-    <div class="hero-card">
-      <div class="hero-img-wrap">
-        <img src="${c.image}" alt="${c.name}" onerror="this.src='https://placehold.co/300x300/0d1525/f5c518?text=?'" />
-      </div>
-      <div class="hero-info">
-        <div class="hero-name">${c.name}</div>
-        <div class="hero-tags">
-          ${c.race ? `<span class="tag">${c.race}</span>` : ''}
-          ${c.gender ? `<span class="tag">${c.gender}</span>` : ''}
-          ${c.affiliation ? `<span class="tag affiliation">${c.affiliation}</span>` : ''}
-        </div>
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="stat-label">Base Ki</div>
-            <div class="stat-value gold">${c.ki || '-'}</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Max Ki</div>
-            <div class="stat-value blue">${c.maxKi || '-'}</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">ID</div>
-            <div class="stat-value white">${c.id}</div>
-          </div>
-        </div>
-        <p class="description">${c.description || 'Sin descripción disponible.'}</p>
-        ${planetBtn}
-      </div>
-    </div>
-    ${transformsHTML}
-  `;
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
 
-  document.title = `${c.name} - Dragon Ball Z`;
-}
+    /* MAIN */
+    .main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
 
-load();
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 2rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--gold); }
+
+    
+    .hero-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2.5rem;
+      margin-bottom: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(245,197,24,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-img-wrap {
+      background: #0d1525;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      overflow: hidden;
+    }
+
+    .hero-img-wrap img {
+      max-height: 320px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .hero-info { display: flex; flex-direction: column; gap: 0; }
+
+    .hero-name {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .tag {
+      background: rgba(245,197,24,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(245,197,24,0.2);
+      border-radius: 20px;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .tag.affiliation {
+      background: rgba(59,130,246,0.1);
+      color: #60a5fa;
+      border-color: rgba(59,130,246,0.2);
+    }
+
+   
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-value {
+      font-family: 'Bangers', cursive;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.blue { color: #60a5fa; }
+    .stat-value.white { color: var(--text); }
+
+   
+    .description {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.65;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+
+   
+    .btn-planet {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.25rem;
+      background: rgba(59,130,246,0.12);
+      color: #60a5fa;
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-planet:hover {
+      background: rgba(59,130,246,0.22);
+      border-color: #3b82f6;
+    }
+
+  
+    .section-title {
+      font-family: 'Bangers', cursive;
+      font-size: 1.9rem;
+      letter-spacing: 2px;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+
+    .transformations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .transform-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .transform-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+      box-shadow: 0 8px 30px rgba(245,197,24,0.12);
+    }
+
+    .transform-img {
+      height: 150px;
+      background: #0d1525;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .transform-img img {
+      max-height: 135px;
+      max-width: 90%;
+      object-fit: contain;
+    }
+
+    .transform-body { padding: 0.75rem; }
+
+    .transform-name {
+      font-family: 'Bangers', cursive;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .transform-ki {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .transform-ki span { color: var(--gold); }
+
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 6rem;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      text-align: center;
+      padding: 4rem;
+      color: var(--danger);
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 700px) {
+      .hero-card {
+        grid-template-columns: 1fr;
+      }
+      .hero-img-wrap {
+        min-height: 220px;
+      }
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Dragon Ball <span>Z</span></a>
+  <div class="nav-links">
+    <a href="index.html">Personajes</a>
+  </div>
+</nav>
+
+<div class="main">
+  <a href="index.html" class="back-btn">← Volver al inicio</a>
+  <div id="content">
+    <div class="loader"><div class="spinner"></div>Cargando personaje...</div>
+  </div>
+</div>
+
+<script src="personaje.js"></script>
+</body>
+</html>

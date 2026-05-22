@@ -1,77 +1,328 @@
-const API_BASE = 'https://dragonball-api.com/api';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planeta - Dragon Ball Z</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg2: #111827;
+      --card: #161d2e;
+      --border: #1e2d47;
+      --gold: #f5c518;
+      --gold2: #e8a800;
+      --orange: #ff6b00;
+      --text: #e8eaf0;
+      --muted: #8892a4;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+    }
 
-function getParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-function getStatusBadge(isDestroyed) {
-  if (isDestroyed === true) return `<span class="status-badge destroyed"> Planeta destruido</span>`;
-  if (isDestroyed === false) return `<span class="status-badge alive"> Planeta activo</span>`;
-  return `<span class="status-badge unknown">? Estado desconocido</span>`;
-}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      min-height: 100vh;
+    }
 
-async function load() {
-  const id = getParam('id');
-  const charId = getParam('charId');
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 10% 20%, rgba(34,197,94,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 90% 80%, rgba(59,130,246,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  if (charId) {
-    document.getElementById('backBtn').href = `personaje.html?id=${charId}`;
-    document.getElementById('backBtn').textContent = '← Volver al personaje';
-  }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,14,26,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  if (!id) {
-    document.getElementById('content').innerHTML = '<div class="error-msg">No se especificó un planeta.</div>';
-    return;
-  }
+    .logo {
+      font-family: 'Bangers', cursive;
+      font-size: 1.7rem;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(245,197,24,0.4);
+      text-decoration: none;
+    }
+    .logo span { color: var(--orange); }
 
-  try {
-    const res = await fetch(`${API_BASE}/planets/${id}`);
-    if (!res.ok) throw new Error('No encontrado');
-    const p = await res.json();
-    render(p);
-  } catch (e) {
-    document.getElementById('content').innerHTML = `<div class="error-msg">Error al cargar el planeta.</div>`;
-  }
-}
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
 
-function render(p) {
-  document.title = `${p.name} - Dragon Ball Z`;
+    .main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
 
-  const chars = p.characters || [];
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 2rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--gold); }
+  
+    .planet-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2.5rem;
+      margin-bottom: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
 
-  const charsHTML = chars.length
-    ? `
-      <div class="section-title">Personajes del planeta</div>
-      <div class="chars-grid">
-        ${chars.map(c => `
-          <div class="char-card">
-            <div class="char-img">
-              <img src="${c.image}" alt="${c.name}" onerror="this.src='https://placehold.co/180x180/0d1525/f5c518?text=?'" />
-            </div>
-            <div class="char-body">
-              <div class="char-name">${c.name}</div>
-              <div class="char-info"><strong>Raza:</strong> ${c.race || '-'}</div>
-              <div class="char-info"><strong>Ki:</strong> ${c.ki || '-'}</div>
-              <a href="personaje.html?id=${c.id}" class="btn-detail">Ver detalle</a>
-            </div>
-          </div>
-        `).join('')}
-      </div>`
-    : `<div class="section-title">Personajes del planeta</div><p class="no-chars">No hay personajes registrados para este planeta.</p>`;
+    .planet-card::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
 
-  document.getElementById('content').innerHTML = `
-    <div class="planet-card">
-      <div class="planet-img-wrap">
-        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/260x260/0d1525/22c55e?text='" />
-      </div>
-      <div class="planet-info">
-        <div class="planet-name">${p.name}</div>
-        ${getStatusBadge(p.isDestroyed)}
-        <p class="planet-description">${p.description || 'Sin descripción disponible.'}</p>
-      </div>
-    </div>
-    ${charsHTML}
-  `;
-}
+    .planet-img-wrap {
+      background: #0d1525;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      overflow: hidden;
+    }
 
-load();
+    .planet-img-wrap img {
+      max-height: 260px;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .planet-info { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .planet-name {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      width: fit-content;
+    }
+
+    .status-badge.alive {
+      background: rgba(34,197,94,0.12);
+      color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+
+    .status-badge.destroyed {
+      background: rgba(239,68,68,0.12);
+      color: #f87171;
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+
+    .status-badge.unknown {
+      background: rgba(136,146,164,0.12);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .planet-description {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.65;
+      font-weight: 500;
+    }
+
+  
+    .section-title {
+      font-family: 'Bangers', cursive;
+      font-size: 1.9rem;
+      letter-spacing: 2px;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+
+    .chars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .char-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.22s, border-color 0.22s, box-shadow 0.22s;
+    }
+    .char-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+      box-shadow: 0 8px 30px rgba(245,197,24,0.12);
+    }
+
+    .char-img {
+      height: 180px;
+      background: #0d1525;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .char-img img {
+      max-height: 165px;
+      max-width: 90%;
+      object-fit: contain;
+    }
+
+    .char-body { padding: 0.9rem; flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+
+    .char-name {
+      font-family: 'Bangers', cursive;
+      font-size: 1.2rem;
+      letter-spacing: 0.5px;
+      color: var(--gold);
+    }
+
+    .char-info {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .char-info strong { color: var(--text); }
+
+    .btn-detail {
+      margin-top: 0.75rem;
+      padding: 0.45rem 1rem;
+      background: var(--gold);
+      color: #0a0e1a;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      align-self: flex-start;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-detail:hover {
+      background: var(--gold2);
+      transform: scale(1.03);
+    }
+
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 6rem;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      text-align: center;
+      padding: 4rem;
+      color: var(--danger);
+      font-size: 1.1rem;
+    }
+
+    .no-chars {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 1rem 0;
+    }
+
+    @media (max-width: 700px) {
+      .planet-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Dragon Ball <span>Z</span></a>
+  <div class="nav-links">
+    <a href="index.html">Personajes</a>
+  </div>
+</nav>
+
+<div class="main">
+  <a id="backBtn" href="index.html" class="back-btn">← Volver</a>
+  <div id="content">
+    <div class="loader"><div class="spinner"></div>Cargando planeta...</div>
+  </div>
+</div>
+
+<script src="planeta.js"></script>
+</body>
+</html>
