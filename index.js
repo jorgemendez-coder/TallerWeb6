@@ -6,10 +6,6 @@ const PER_PAGE = 12;
 
 
 document.getElementById('btnExplorer').addEventListener('click', () => enterApp());
-document.getElementById('btnPlanets').addEventListener('click', () => {
-  enterApp();
-  setTimeout(() => window.scrollTo({ top: 400, behavior: 'smooth' }), 700);
-});
 
 function enterApp() {
   const splash = document.getElementById('splashScreen');
@@ -41,7 +37,6 @@ async function fetchAllCharacters() {
   }
   return results;
 }
-
 
 function buildRaceFilter(chars) {
   const races = [...new Set(chars.map(c => c.race).filter(Boolean))].sort();
@@ -128,7 +123,7 @@ async function initApp() {
     buildRaceFilter(allCharacters);
     renderGrid();
   } catch (e) {
-    document.getElementById('content').innerHTML = '<div class="empty"> Error al cargar la API. Asegurate de estar en un servidor web.</div>';
+    document.getElementById('content').innerHTML = '<div class="empty">⚠️ Error al cargar la API. Asegurate de estar en un servidor web.</div>';
   }
 }
 
