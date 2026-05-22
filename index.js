@@ -4,7 +4,6 @@ let filtered = [];
 let currentPage = 1;
 const PER_PAGE = 12;
 
-
 document.getElementById('btnExplorer').addEventListener('click', () => enterApp());
 
 function enterApp() {
@@ -61,6 +60,7 @@ function applyFilters() {
   currentPage = 1;
   renderGrid();
 }
+
 
 function renderGrid() {
   const start = (currentPage - 1) * PER_PAGE;
@@ -125,7 +125,7 @@ async function initApp() {
   } catch (e) {
     document.getElementById('content').innerHTML = '<div class="empty">⚠️ Error al cargar la API. Asegurate de estar en un servidor web.</div>';
   }
-}
 
-document.getElementById('searchInput').addEventListener('input', applyFilters);
-document.getElementById('raceFilter').addEventListener('change', applyFilters);
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('raceFilter').addEventListener('change', applyFilters);
+}
